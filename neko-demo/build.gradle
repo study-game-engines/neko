@@ -1,12 +1,8 @@
-plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.4.30'
+artifact "neko-demo-desktop"
+
+source {
+    include project(":neko-engine-desktop")
+    include "org.slf4j:slf4j-log4j12:1.7.30"
 }
 
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation project(':neko-engine')
-    implementation 'org.slf4j:slf4j-log4j12:1.7.30'
-}
+FeatureaManifest()

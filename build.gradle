@@ -1,0 +1,24 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+        mavenCentral()
+        google()
+    }
+}
+
+plugins {
+    id "featurea" version "$featurea_version" apply false
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+group = "com.featurea"
+version = featurea_version
+
+subprojects {
+    apply plugin: "featurea"
+}

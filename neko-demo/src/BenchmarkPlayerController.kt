@@ -1,3 +1,5 @@
+package neko.demo
+
 import de.twometer.neko.core.Window
 import de.twometer.neko.player.PlayerController
 import de.twometer.neko.scene.Scene

@@ -1,0 +1,1 @@
+@echo off && gradlew neko-demo-desktop:desktopJar && java -jar neko-demo/out/neko-demo.jar

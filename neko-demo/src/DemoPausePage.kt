@@ -1,3 +1,5 @@
+package neko.demo
+
 import de.twometer.neko.core.NekoApp
 import de.twometer.neko.gui.Page
 

@@ -1,0 +1,164 @@
+// Powered by Featurea
+
+import java.util.regex.Pattern
+
+settings.ext.artifact = { String directory ->
+    if (directory == ".") return includeArtifact(rootProject.projectDir)
+    File artifactDir = new File(rootProject.projectDir, "$currentDir/$directory")
+    if (new File(artifactDir, "settings.gradle").exists()) {
+        includeBuild(artifactDir)
+    } else {
+        includeArtifact(artifactDir)
+    }
+}
+
+void includeArtifact(File artifactDir) {
+    File buildFile = new File(artifactDir, "build.gradle")
+    if (!buildFile.exists()) throw new Error("buildFile: $buildFile")
+    String artifactName = artifactDir.name
+    String artifactId = null
+    try (BufferedReader reader = new BufferedReader(new FileReader(buildFile))) {
+        Tag tag = Tag.ARTIFACT
+        Attribute attribute = null
+        boolean isFirstLine = true
+        String line
+        ArrayList<String> targets = new ArrayList()
+        while ((line = reader.readLine()) != null) {
+            line = line.trim()
+            if (line.isBlank()) continue
+//            println("$line ($tag, $attribute)")
+            if (isFirstLine) {
+                isFirstLine = false
+                String artifactMatch = Tag.__ARTIFACT.match(line)
+                if (artifactMatch != null) {
+                    artifactId = artifactMatch
+                    instance(artifactId, artifactDir)
+                    return
+                }
+            }
+            if (tag == Tag.ARTIFACT) {
+                String artifactMatch = Tag.ARTIFACT.match(line)
+                if (artifactMatch != null) {
+                    artifactId = artifactMatch
+                    instance(artifactId, artifactDir)
+                    tag = null
+                    attribute = null
+                }
+            } else if (line.startsWith("transpile")) {
+                generated("$artifactId-transpile-desktop", new File(artifactDir, "assemble/$artifactName-transpile"))
+            } else if (tag == Tag.EXAMPLE) {
+                String exampleMatch = Tag.EXAMPLE.match(line)
+                if (exampleMatch != null) {
+                    facade(artifactId, artifactDir, "$exampleMatch-example")
+                }
+            } else if (Attribute.INTEROP.accept(line)) {
+                tag = null
+                attribute = Attribute.INTEROP
+            } else if (Attribute.RELEASE.accept(line)) {
+                tag = null
+                attribute = Attribute.RELEASE
+            } else if (attribute == Attribute.INTEROP) {
+                if (line.startsWith("ios")) {
+                    includeArtifact(new File(artifactDir, "include/ios"))
+                } else if (line.startsWith("jvm")) {
+                    includeArtifact(new File(artifactDir, "include/jvm"))
+                } else if (line.startsWith("editor")) {
+                    includeArtifact(new File(artifactDir, "include/editor"))
+                }
+            } else if (attribute == Attribute.RELEASE) {
+                if (line.startsWith("android")) {
+                    generated("$artifactId-android", new File(artifactDir, "assemble/$artifactName-android"))
+                    targets.add("android")
+                } else if (line.startsWith("browser")) {
+                    generated("$artifactId-browser", new File(artifactDir, "assemble/$artifactName-browser"))
+                    targets.add("browser")
+                } else if (line.startsWith("desktop")) {
+                    generated("$artifactId-desktop", new File(artifactDir, "assemble/$artifactName-desktop"))
+                    targets.add("desktop")
+                } else if (line.startsWith("ios")) {
+                    generated("$artifactId-ios", new File(artifactDir, "assemble/$artifactName-ios"))
+                    targets.add("ios")
+                } else if (line.startsWith("examples")) {
+                    if (targets.isEmpty()) {
+                        targets.addAll(["desktop"]) // just for now todo replace ["desktop"] with ["android", "browser", "desktop", "ios"]
+                    }
+                    String sandboxId = "$artifactId-examples"
+                    generated(sandboxId, new File(artifactDir, "assemble/$artifactName-examples"))
+                    if (!sandboxId.contains("android-") && !sandboxId.contains("browser-") && !sandboxId.contains("desktop-") && !sandboxId.contains("ios-")) {
+                        for (String target : targets) {
+                            generated("$artifactId-examples-$target", new File(artifactDir, "assemble/$artifactName-examples-$target"))
+                        }
+                    }
+                    tag = Tag.EXAMPLE
+                    attribute = null
+                } else if (line.startsWith("sandbox")) {
+                    tag = Tag.EXAMPLE
+                    attribute = null
+                }
+            }
+        }
+    }
+}
+
+void generated(String artifactId, File artifactDir) {
+    if (!artifactDir.exists()) {
+        artifactDir.mkdirs()
+        new File(artifactDir, "build.gradle").text = """generated("${artifactId}")"""
+    }
+    instance(artifactId, artifactDir)
+}
+
+void facade(String artifactId, File artifactDir, String specifier) {
+    artifactId = "${artifactId.replace("-android", "").replace("-browser", "").replace("-desktop", "").replace("-ios", "")}-$specifier"
+    instance(artifactId, artifactDir)
+}
+
+void instance(String artifactId, File artifactDir) {
+    if (artifactDir == rootProject.projectDir) return
+    String path = ":$artifactId"
+    include(path)
+    project(path).projectDir = artifactDir
+//    println("$path: $artifactDir")
+}
+
+enum Tag {
+
+    __ARTIFACT(/^\/\/artifact.*"(.*)".*$/),
+    ARTIFACT(/^artifact.*"(.*)".*$/),
+    EXAMPLE(/^example\("(\w*)".*$/);
+
+    private Pattern pattern
+
+    Tag(String regex) {
+        pattern = Pattern.compile(regex)
+    }
+
+    boolean accept(String line) {
+        return pattern.matcher(line).matches()
+    }
+
+    String match(String line) {
+        Collection<Collection<String>> matches = pattern.matcher(line).findAll()
+        return matches.size() != 0 ? matches[0][1] : null
+    }
+
+}
+
+enum Attribute {
+
+    INTEROP("interop"),
+    RELEASE("release");
+
+    private String name
+
+    Attribute(String name) {
+        this.name = name
+    }
+
+    boolean accept(String line) {
+        return line.startsWith(name)
+    }
+
+}
+
+settings.ext.currentDir = "." // todo make private

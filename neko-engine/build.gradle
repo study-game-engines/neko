@@ -1,103 +1,32 @@
-import org.gradle.internal.os.OperatingSystem
+artifact "neko-engine-desktop"
 
-plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.4.30'
-    id 'maven-publish'
-    id 'java-library'
-}
+project.ext.natives = currentOs.windows ? "natives-windows" : (currentOs.macOsX ? "natives-macos" : "natives-linux")
 
-group 'de.twometer'
-version '2.3.4'
-
-/* Version configuration */
-project.ext.lwjglVersion = "3.2.3"
-project.ext.imguiVersion = "1.84.1.0"
-
-/* Use appropriate natives */
-if (System.getenv("NEKO_NATIVES") == null) {
-    switch (OperatingSystem.current()) {
-        case OperatingSystem.LINUX:
-            project.ext.natives = "natives-linux"
-            break
-        case OperatingSystem.MAC_OS:
-            project.ext.natives = "natives-macos"
-            break
-        case OperatingSystem.WINDOWS:
-            project.ext.natives = "natives-windows"
-            break
-        default:
-            throw IllegalStateException("Unsupported operating system")
-    }
-} else {
-    project.ext.natives = System.getenv("NEKO_NATIVES")
-}
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-
-    api platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
-    api "org.lwjgl:lwjgl"
-    api "org.lwjgl:lwjgl-assimp"
-    api "org.lwjgl:lwjgl-glfw"
-    api "org.lwjgl:lwjgl-meow"
-    api "org.lwjgl:lwjgl-openal"
-    api "org.lwjgl:lwjgl-opengl"
-    api "org.lwjgl:lwjgl-stb"
-    api "org.lwjgl:lwjgl-tinyfd"
-
-    api "org.joml:joml:1.10.0"
-    api 'org.greenrobot:eventbus:3.2.0'
-    api 'io.github.microutils:kotlin-logging:1.12.0'
-    api 'org.slf4j:slf4j-api:1.7.30'
-    api 'com.labymedia:ultralight-java-base:0.3.6'
-    api 'com.labymedia:ultralight-java-databind:0.3.6'
-    api "io.github.spair:imgui-java-binding:$imguiVersion"
-    api "io.github.spair:imgui-java-lwjgl3:$imguiVersion"
-
-    implementation 'com.google.code.gson:gson:2.8.8'
-
-    runtimeOnly "org.lwjgl:lwjgl::$natives"
-    runtimeOnly "org.lwjgl:lwjgl-assimp::$natives"
-    runtimeOnly "org.lwjgl:lwjgl-glfw::$natives"
-    runtimeOnly "org.lwjgl:lwjgl-meow::$natives"
-    runtimeOnly "org.lwjgl:lwjgl-openal::$natives"
-    runtimeOnly "org.lwjgl:lwjgl-opengl::$natives"
-    runtimeOnly "org.lwjgl:lwjgl-stb::$natives"
-    runtimeOnly "org.lwjgl:lwjgl-tinyfd::$natives"
-    runtimeOnly "io.github.spair:imgui-java-$natives:$imguiVersion"
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifactId = 'neko-engine'
-            from components.java
-            pom {
-                name = 'neko-engine'
-                description = 'Neko Engine is a 3D game engine using Kotlin and LWJGL'
-                url = 'https://github.com/nekotec/neko-engine'
-                licenses {
-                    license {
-                        name = 'Apache License 2.0'
-                        url = 'https://github.com/nekotec/neko-engine/blob/main/LICENSE'
-                    }
-                }
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            name = "maven.twometer.de"
-            url = "https://maven.twometer.de/releases"
-            credentials {
-                username = System.getenv("MAVEN_USER")
-                password = System.getenv("MAVEN_PASS")
-            }
-        }
-    }
+source {
+    include "org.lwjgl:lwjgl:$lwjgl_version"
+    include "org.lwjgl:lwjgl-assimp:$lwjgl_version"
+    include "org.lwjgl:lwjgl-glfw:$lwjgl_version"
+    include "org.lwjgl:lwjgl-meow:$lwjgl_version"
+    include "org.lwjgl:lwjgl-openal:$lwjgl_version"
+    include "org.lwjgl:lwjgl-opengl:$lwjgl_version"
+    include "org.lwjgl:lwjgl-stb:$lwjgl_version"
+    include "org.lwjgl:lwjgl-tinyfd:$lwjgl_version"
+    include "org.joml:joml:1.10.0"
+    include "org.greenrobot:eventbus:3.2.0"
+    include "io.github.microutils:kotlin-logging:1.12.0"
+    include "org.slf4j:slf4j-api:1.7.30"
+    include "com.labymedia:ultralight-java-base:0.3.6"
+    include "com.labymedia:ultralight-java-databind:0.3.6"
+    include "io.github.spair:imgui-java-binding:$imgui_version"
+    include "io.github.spair:imgui-java-lwjgl3:$imgui_version"
+    include "com.google.code.gson:gson:2.8.8"
+    include "org.lwjgl:lwjgl::$natives"
+    include "org.lwjgl:lwjgl-assimp::$natives"
+    include "org.lwjgl:lwjgl-glfw::$natives"
+    include "org.lwjgl:lwjgl-meow::$natives"
+    include "org.lwjgl:lwjgl-openal::$natives"
+    include "org.lwjgl:lwjgl-opengl::$natives"
+    include "org.lwjgl:lwjgl-stb::$natives"
+    include "org.lwjgl:lwjgl-tinyfd::$natives"
+    include "io.github.spair:imgui-java-$natives:$imgui_version"
 }

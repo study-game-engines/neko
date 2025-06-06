@@ -13,6 +13,7 @@ class UltralightNekoLogger : UltralightLogger {
             UltralightLogLevel.INFO -> logger.info { message }
             UltralightLogLevel.WARNING -> logger.warn { message }
             UltralightLogLevel.ERROR -> logger.error { message }
+            else -> {}
         }
     }
 

@@ -39,7 +39,7 @@ class UltralightNekoViewListener : UltralightViewListener {
         message: String?,
         lineNumber: Long,
         columnNumber: Long,
-        sourceId: String?
+        sourceId: String?,
     ) {
         val formatted = "[JavaScript] [$sourceId] [$lineNumber:$columnNumber] $message"
         when (level) {
@@ -48,6 +48,7 @@ class UltralightNekoViewListener : UltralightViewListener {
             MessageLevel.LOG -> logger.info { formatted }
             MessageLevel.WARNING -> logger.warn { formatted }
             MessageLevel.ERROR -> logger.error { formatted }
+            else -> {}
         }
     }
 
@@ -55,7 +56,7 @@ class UltralightNekoViewListener : UltralightViewListener {
         openerUrl: String?,
         targetUrl: String?,
         isPopup: Boolean,
-        popupRect: IntRect?
+        popupRect: IntRect?,
     ): UltralightView? = null
 
 }
